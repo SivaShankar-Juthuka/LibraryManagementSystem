@@ -1,7 +1,7 @@
 # app/api/entities/borrow.rb
 class Api::Entities::Borrow < Grape::Entity
     expose :id, if: {type: :full}
-    expose :book, using: Api::Entities::Book do |borrow, options|
+    expose :book, using: Api::Entities::Book do |borrow|
         borrow.book
     end
     expose :issued_copy

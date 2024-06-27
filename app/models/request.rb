@@ -97,7 +97,6 @@ class Request < ApplicationRecord
     %w[id member_id book_id requested_at is_approved]
   end
 
-  # ransackable associations
   def self.ransackable_associations(auth_object = nil)
     %w[member book]
   end
