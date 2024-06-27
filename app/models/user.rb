@@ -11,34 +11,38 @@ class User < ApplicationRecord
         user = User.find_by(id: user_id)
         library = Library.find_by(id: library_id)
         unless user && library
-            raise ActiveRecord::RecordNotFound.new("Invalid user or library")
+          error!({ message: "Invalid user or library" }, 404)
         end
         if user.member_for_library?(library_id)
-            raise ArgumentError.new("User is already assigned as a member to this library")
+          error!({ message: "User is already assigned as a member to this library" }, 422)
         end
         librarian = Librarian.new(user_id: user.id, library_id: library.id)
         unless librarian.save
-            raise ActiveRecord::RecordInvalid.new(librarian)
+          error!({ message: librarian.errors.full_messages.join(", ") }, 422)
         end
+        user.update(is_assigned: true)
         librarian
     end
-  
+      
     def self.assign_member(user_id, library_id)
         user = User.find_by(id: user_id)
         library = Library.find_by(id: library_id)
         unless user && library
-            raise ActiveRecord::RecordNotFound.new("Invalid user or library")
+          error!({ message: "Invalid user or library" }, 404)
         end
         if user.librarian_for_library?(library_id)
-            raise ArgumentError.new("User is already assigned as a librarian to this library")
+          error!({ message: "User is already assigned as a librarian to this library" }, 422)
         end
         member = Member.new(user_id: user.id, library_id: library.id, borrowing_limit: BORROW_LIMIT)
         unless member.save
-            raise ActiveRecord::RecordInvalid.new(member)
+          error!({ message: member.errors.full_messages.join(", ") }, 422)
         end
+        user.update(is_assigned: true)
+        user.reload
+        puts user.inspect , "%#####$############"
         member
     end
-  
+      
     def admin?
         Current.user.present? && Admin.exists?(user_id: Current.user.id)
     end

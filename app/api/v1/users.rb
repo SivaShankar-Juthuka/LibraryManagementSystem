@@ -128,7 +128,7 @@ class Api::V1::Users < Grape::API
                 }
                 users = User.ransack(search_conditions.merge(m: 'or')).result
                 users = paginate(users)
-                present users, with: Api::Entities::User, type: :full
+                present users, with: Api::Entities::User, type: :private
             else
                 error!("Unauthorized access", 401)
             end
@@ -187,7 +187,7 @@ class Api::V1::Users < Grape::API
                 end
             end
 
-            resources :library do
+            resources :libraries do
                 route_param :library_id do
                     # Assign user as librarian to a library 
                     desc "Assign user as librarian to a library"

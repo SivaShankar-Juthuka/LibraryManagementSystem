@@ -1,11 +1,11 @@
 # app/api/v1/requests.rb
 class Api::V1::Requests < Grape::API
-    resources :member do
+    resources :members do
         before do
             authenticate!
         end
         
-        resources :request do
+        resources :requests do
             # get all requests
             desc "Get all requests"
             params do
@@ -32,7 +32,7 @@ class Api::V1::Requests < Grape::API
         end
 
         route_param :member_id do
-            resources :request do
+            resources :requests do
                 # get all request of member
                 desc "Get all requests of member"
                 params do

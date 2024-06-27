@@ -1,10 +1,10 @@
 # app/api/v1/borrows.rb
 class Api::V1::Borrows < Grape::API
-    resources :member do
+    resources :members do
         before do
             authenticate!
         end 
-        resources :borrow do
+        resources :borrows do
             desc "Get all Borrows"
             params do
                 optional :page, type: Integer, desc: "Page number"
@@ -31,7 +31,7 @@ class Api::V1::Borrows < Grape::API
         end
         
         route_param :member_id do
-            resources :borrow do   
+            resources :borrows do   
                 # Get borrow history of a member
                 desc "Get borrow history of a member"
                 params do
@@ -42,7 +42,7 @@ class Api::V1::Borrows < Grape::API
                 get do
                     member = Member.find(params[:member_id])
                     if member
-                        if (Current.user.librarian? && Current.library_id ==  member.library_id) || (Current.user.member? && Current.user.id == member.user_id)
+                        if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  member.library_id) || (Current.user.member? && Current.user.id == member.user_id)
                             search_conditions = {
                                 member_id_eq: params[:query],
                                 book_id_eq: params[:query],
@@ -70,6 +70,7 @@ class Api::V1::Borrows < Grape::API
                         borrow = member.borrows.find(params[:borrow_id])
                         present borrow, with: Api::Entities::Borrow, type: :full
                     end
+
         
                     # edit the borrow history
                     desc "Edit the borrow history"

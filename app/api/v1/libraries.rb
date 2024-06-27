@@ -1,6 +1,6 @@
 # app/api/v1/libraries.rb
 class Api::V1::Libraries < Grape::API
-    resources :library do
+    resources :libraries do
         before do
             authenticate!
         end
@@ -75,9 +75,23 @@ class Api::V1::Libraries < Grape::API
 
         resources :book_inventories do
             desc "Get all book inventories"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get do
                 if Current.user.admin?
-                    book_inventories = BookInventory.all
+                    search_conditions ={
+                        id_eq: params[:query],
+                        book_id_eq: params[:query],
+                        library_id_eq: params[:query],
+                        copies_borrowed_eq: params[:query],
+                        copies_available_eq: params[:query],
+                        copies_reserved_eq: params[:query]
+                    }
+                    book_inventories = BookInventory.ransack(search_conditions.merge(m:'or')).result
+                    book_inventories = paginate(book_inventories)
                     present book_inventories, with: Api::Entities::BookInventory, type: :full
                 else
                     error!({ error: "Unauthorized" }, 401)
@@ -89,16 +103,21 @@ class Api::V1::Libraries < Grape::API
             # Get the Specific library details
             desc "Get a Library"
             params do
-                requires :library_id, type: Integer, desc: "Library ID"
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
             end
             get do
                 if Current.user.admin? || Current.library_id == params[:library_id]
-                    library = Library.find_by(id: params[:library_id])
-                    if library
-                        present library, with: Api::Entities::Library, type: :full
-                    else
-                        error!({ error: "Library not found" }, 404)
-                    end
+                    search_conditions ={
+                        id_eq: params[:query],
+                        library_name_cont: params[:query],
+                        library_address_cont: params[:query]
+                    }
+                    libraries = Library.where(id: params[:library_id])
+                    libraries = libraries.ransack(search_conditions.merge(m: 'or')).result
+                    libraries = paginate(libraries)
+                    present libraries, with: Api::Entities::Library, type: :full
                 else
                     error!({ error: "Unauthorized" }, 401)
                 end
@@ -142,28 +161,79 @@ class Api::V1::Libraries < Grape::API
 
             # Librarians for particular library id
             desc "Get all librarians for a specific library"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get 'librarians' do
-                library = Library.find(params[:library_id])
-                if library
-                    librarians = library.librarians
-                    present librarians, with: Api::Entities::Librarian, type: :full
+                if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  params[:library_id])
+                    library = Library.find(params[:library_id])
+                    search_conditions ={
+                            id_eq: params[:query],
+                            library_name_cont: params[:query],
+                            library_address_cont: params[:query]
+                        }
+                    if library
+                        librarians = library.librarians.ransack(search_conditions.merge(m: 'or')).result
+                        librarians = paginate(librarians)
+                        present librarians, with: Api::Entities::Librarian, type: :full
+                    else
+                        error!('Library not found', 404)
+                    end
                 else
-                    error!('Library not found', 404)
+                    error!({ error: "Unauthorized" }, 401)
                 end
             end
 
             desc "Get all members for a specific library"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get 'members' do
-                if Current.user.admin? || Current.user.librarian?
+                if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  params[:library_id])
                     library = Library.find(params[:library_id])
+                    search_conditions ={
+                        id_eq: params[:query],
+                        library_name_cont: params[:query],
+                        library_address_cont: params[:query]
+                    }
                     if library
-                        members = library.members
+                        members = library.members.ransack(search_conditions.merge(m: 'or')).result
+                        members = paginate(members)
                         present members, with: Api::Entities::Member
                     else
                         error!('Library not found', 404)
                     end
                 else
                     error!({ error: "Unauthorized" }, 401)
+                end
+            end
+
+            resources :books do
+                desc "Get all books for a specific library"
+                params do
+                    optional :page, type: Integer, desc: "Page number"
+                    optional :per_page, type: Integer, desc: "Number of items per page"
+                    optional :query, type: String, desc: "Search query"
+                end
+                get do
+                    library = Library.find(params[:library_id])
+                    book_inventories = library.book_inventories
+                    search_conditions = {
+                      title_cont: params[:query],
+                      author_cont: params[:query],
+                      published_at_cont: params[:query],
+                      isbn_matches: params[:query],
+                      genre_cont: params[:query],
+                      copy_count_matches: params[:query]
+                    }
+                    books = Book.joins(:book_inventories).where(book_inventories: { id: book_inventories }).distinct
+                    books = books.ransack(search_conditions.merge(m: 'or')).result
+                    books = paginate(books)
+                    present books, with: Api::Entities::Book, type: :full
                 end
             end
 
@@ -197,6 +267,9 @@ class Api::V1::Libraries < Grape::API
                         error!({ error: "Unauthorized" }, 401)
                     end
                 end
+
+
+
         
                 # Create a book inventory
                 desc "Create a new book inventory"

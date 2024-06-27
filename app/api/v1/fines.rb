@@ -1,10 +1,10 @@
 # app/api/v1/fines.rb
 class Api::V1::Fines < Grape::API
-    resources :member do
+    resources :members do
         before do
             authenticate!
         end
-        resources :fine do
+        resources :fines do
             desc "Get all fines"
             params do
                 optional :page, type: Integer, desc: "Page number"
@@ -30,11 +30,25 @@ class Api::V1::Fines < Grape::API
         end
 
         route_param :member_id do
-            resource :fine do
+            resource :fines do
                 # Get all fines for a member
                 desc "Get all fines for a member"
+                params do
+                    optional :page, type: Integer, desc: "Page number"
+                    optional :per_page, type: Integer, desc: "Number of items per page"
+                    optional :query, type: String, desc: "Search query"
+                end
                 get do 
-                    fines = Member.find(params[:member_id]).fines
+                    member = Member.find(params[:member_id])
+                    search_conditions = {
+                        member_id_eq: params[:query],
+                        book_id_eq: params[:query],
+                        issued_copy_eq: params[:query],
+                        borrowed_at_cont: params[:query],
+                        due_date_cont: params[:query],
+                        returned_at_cont: params[:query]
+                    }
+                    fines = member.fines.ransack(search_conditions.merge(m: 'or')).result
                     present fines, with: Api::Entities::Fine, type: :full
                 end
     
