@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  member: one
+  book: one
+  requested_at: 2024-06-21 12:21:33
+  status: MyString
+
+two:
+  member: two
+  book: two
+  requested_at: 2024-06-21 12:21:33
+  status: MyString
