@@ -6,5 +6,6 @@ class Api::Entities::Book < Grape::Entity
     expose :genre
     expose :isbn
     expose :published_at
+    expose :copy_count
 end
     

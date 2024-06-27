@@ -51,10 +51,22 @@ class Api::V1::Libraries < Grape::API
         
         resources :fine_rates do
             desc "Get all fine rates"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get do
                 if Current.user.admin?
-                    fine_rates = FineRate.all
-                    present fine_rates, with: Api::Entities::FineRate, type: :full
+                    search_conditions ={
+                        id_eq: params[:query],
+                        fine_amount_cont: params[:query],
+                        fine_type_cont: params[:query],
+                        library_id_eq: params[:query]
+                    }
+                    fine_rates = FineRate.ransack(search_conditions.merge(m: 'or')).result
+                    fine_rate = paginate(fine_rates)
+                    present fine_rate, with: Api::Entities::FineRate, type: :full
                 else
                     error!({ error: "Unauthorized" }, 401)
                 end
@@ -158,11 +170,25 @@ class Api::V1::Libraries < Grape::API
             resources :book_inventories do
                 # Return all book inventories for a specific library
                 desc "Return list of book inventories for a library"
+                params do
+                    optional :page, type: Integer, desc: "Page number"
+                    optional :per_page, type: Integer, desc: "Number of items per page"
+                    optional :query, type: String, desc: "Search query"
+                end
                 get do
                     if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id])
                         library = Library.find(params[:library_id])
+                        search_conditions ={
+                            id_eq: params[:query],
+                            book_id_eq: params[:query],
+                            library_id_eq: params[:query],
+                            copies_borrowed_eq: params[:query],
+                            copies_available_eq: params[:query],
+                            copies_reserved_eq: params[:query]
+                        }
                         if library
                             book_inventories = library.book_inventories
+                            book_inventories = paginate(book_inventories)
                             present book_inventories, with: Api::Entities::BookInventory, type: :full
                         else
                             error!('Library not found', 404)
@@ -266,9 +292,30 @@ class Api::V1::Libraries < Grape::API
             resources :fine_rates do
                 # Get all fine rates for a specific library
                 desc "Get all fine rates for a specific library"
+                params do
+                    optional :page, type: Integer, desc: "Page number"
+                    optional :per_page, type: Integer, desc: "Number of items per page"
+                    optional :query, type: String, desc: "Search query"
+                end
                 get do
-                    library = Library.find(params[:library_id])
-                    present library.fine_rates, with: Api::Entities::FineRate, type: :full
+                    if Current.user.admin? || (Current.user.librarian? && Current.library_id  == params[:library_id])
+                        library = Library.find(params[:library_id])
+                        search_conditions ={
+                            id_eq: params[:query],
+                            fine_amount_cont: params[:query],
+                            fine_type_cont: params[:query],
+                            library_id_eq: params[:query]
+                        }
+                        if library
+                            fine_rates = library.fine_rates.ransack(search_conditions.merge(m: 'or')).result
+                            fine_rates = paginate(fine_rates)
+                            present fine_rates, with: Api::Entities::FineRate, type: :full
+                        else
+                            error!('Library not found', 404)
+                        end
+                    else
+                        error!('Unauthorized', 401)
+                    end
                 end
             
                 # Create a fine rate for a specific library

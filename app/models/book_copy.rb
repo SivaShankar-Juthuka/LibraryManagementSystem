@@ -8,4 +8,12 @@ class BookCopy < ApplicationRecord
   def update_availability(available)
     update(is_available: available)
   end
+
+  def self.ransackable_attributes(auth_object = nil)
+    %i[id book_id copy_number is_damaged is_available]
+  end
+
+  def self.ransackable_associations(auth_object = nil)
+    %i[book]
+  end
 end

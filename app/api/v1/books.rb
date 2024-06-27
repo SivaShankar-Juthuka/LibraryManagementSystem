@@ -7,9 +7,22 @@ class Api::V1::Books < Grape::API
 
         resources :book_copies do
             desc "Return all book copies"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get do
-                if Current.user.admin? 
-                    book_copies = BookCopy.all
+                if Current.user.admin?
+                    search_conditions = {
+                        id_eq: params[:query],
+                        book_id_eq: params[:query],
+                        copy_number_eq: params[:query],
+                        is_damaged_matches: params[:query], 
+                        is_available_matches: params[:query]
+                    }
+                    book_copies = BookCopy.ransack(search_conditions.merge(m: 'or')).result
+                    book_copies = paginate(book_copies)
                     present book_copies, with: Api::Entities::BookCopy, type: :full
                 else
                     error!('Unauthorized access', 401)
@@ -19,9 +32,23 @@ class Api::V1::Books < Grape::API
 
         # Return all books
         desc "Return list of books"
+        params do
+            optional :page, type: Integer, desc: "Page number"
+            optional :per_page, type: Integer, desc: "Number of items per page"
+            optional :query, type: String, desc: "Search query"
+        end
         get do
             if Current.user.admin? || Current.user.librarian?
-                books = Book.all
+                search_conditions = {
+                    title_cont: params[:query],
+                    author_cont: params[:query],
+                    published_at_cont: params[:query],
+                    isbn_matches: params[:query],
+                    genre_cont: params[:query],
+                    copy_count_matches: params[:query]
+                }
+                books = Book.ransack(search_conditions.merge(m: 'or')).result
+                books = paginate(books)
                 present books, with: Api::Entities::Book, type: :full
             else
                 error!('Unauthorized', 401)
@@ -55,9 +82,6 @@ class Api::V1::Books < Grape::API
         route_param :book_id do
             # Get a specific book
             desc "Return a specific book"
-            params do
-                requires :book_id, type: Integer, desc: "Book ID"
-            end
             get do
                 if Current.user.admin? || Current.user.librarian?
                     book = Book.find(params[:book_id])
@@ -102,9 +126,6 @@ class Api::V1::Books < Grape::API
         
             # Delete a book
             desc "Delete a book"
-            params do
-                requires :book_id, type: Integer, desc: "Book ID"
-            end
             delete do
                 if Current.user.admin?
                     book = Book.find(params[:book_id])

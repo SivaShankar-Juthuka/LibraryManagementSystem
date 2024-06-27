@@ -6,9 +6,23 @@ class Api::V1::Borrows < Grape::API
         end 
         resources :borrow do
             desc "Get all Borrows"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get do
                 if Current.user.admin? || Current.user.librarian?
-                    borrow = Borrow.all
+                    search_conditions = {
+                        member_id_eq: params[:query],
+                        book_id_eq: params[:query],
+                        issued_copy_eq: params[:query],
+                        borrowed_at_cont: params[:query],
+                        due_date_cont: params[:query],
+                        returned_at_cont: params[:query]
+                    }
+                    borrow = Borrow.ransack(search_conditions.merge(m: 'or')).result
+                    borrow = paginate(borrow)
                     present borrow, with: Api::Entities::Borrow, type: :full
                 else
                     error!('Unauthorized access', 401)
@@ -20,11 +34,25 @@ class Api::V1::Borrows < Grape::API
             resources :borrow do   
                 # Get borrow history of a member
                 desc "Get borrow history of a member"
+                params do
+                    optional :page, type: Integer, desc: "Page number"
+                    optional :per_page, type: Integer, desc: "Number of items per page"
+                    optional :query, type: String, desc: "Search query"
+                end
                 get do
                     member = Member.find(params[:member_id])
                     if member
                         if (Current.user.librarian? && Current.library_id ==  member.library_id) || (Current.user.member? && Current.user.id == member.user_id)
-                            borrows = member.borrows
+                            search_conditions = {
+                                member_id_eq: params[:query],
+                                book_id_eq: params[:query],
+                                issued_copy_eq: params[:query],
+                                borrowed_at_cont: params[:query],
+                                due_date_cont: params[:query],
+                                returned_at_cont: params[:query]
+                            }
+                            borrows = member.borrows.ransack(search_conditions.merge(m: 'or')).result
+                            borrows = paginate(borrows)
                             present borrows, with: Api::Entities::Borrow, type: :full
                         else
                             error!({message: "You are not allowed to access this resource"}, 403)

@@ -5,11 +5,24 @@ class Api::V1::Fines < Grape::API
             authenticate!
         end
         resources :fine do
-            # Get all fine histories
+            desc "Get all fines"
+            params do
+                optional :page, type: Integer, desc: "Page number"
+                optional :per_page, type: Integer, desc: "Number of items per page"
+                optional :query, type: String, desc: "Search query"
+            end
             get do
                 if Current.user.admin? || Current.user.librarian?
-                    fine_histories = Fine.all
-                    present fine_histories#, with: Api::V1::Entities::FineHistory
+                    search_conditions = {
+                        id_eq: params[:query], 
+                        fine_amount_eq: params[:query],
+                        paid_status_matches: params[:query],
+                        paid_at: params[:query],
+                        fine_type: params[:query]
+                    }
+                    fine_histories = Fine.ransack(search_conditions.merge(m: 'or')).result
+                    fine_histories = paginate(fine_histories)
+                    present fine_histories, with: Api::Entities::Fine, type: :full
                 else
                     error!('Not authorized', 401)
                 end
@@ -22,7 +35,7 @@ class Api::V1::Fines < Grape::API
                 desc "Get all fines for a member"
                 get do 
                     fines = Member.find(params[:member_id]).fines
-                    present fines
+                    present fines, with: Api::Entities::Fine, type: :full
                 end
     
                 # Edit fine for a member

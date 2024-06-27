@@ -94,4 +94,13 @@ class Borrow < ApplicationRecord
       throw :abort
     end
   end
+
+  def self.ransackable_attributes(auth_object = nil)
+    %w[member_id book_id issued_copy borrowed_at due_date returned_at]
+  end
+
+  def self.ransackable_associations(auth_object = nil)
+    %w[member book fines]
+  end
+  
 end
