@@ -25,7 +25,7 @@ class Api::V1::Borrows < Grape::API
                     borrow = paginate(borrow)
                     present borrow, with: Api::Entities::Borrow, type: :full
                 else
-                    error!('Unauthorized access', 401)
+                    error!('You are not authorized to perform this action access', 401)
                 end
             end
         end
@@ -55,10 +55,10 @@ class Api::V1::Borrows < Grape::API
                             borrows = paginate(borrows)
                             present borrows, with: Api::Entities::Borrow, type: :full
                         else
-                            error!({message: "You are not allowed to access this resource"}, 403)
+                            error!({error: "You are not authorized to perform this action"}, 403)
                         end
                     else
-                        error!({message: "Member not found"}, 404)
+                        error!({error: "Member not found"}, 404)
                     end                        
                 end
         
@@ -87,7 +87,7 @@ class Api::V1::Borrows < Grape::API
                                 updated_borrow = borrow.update_borrow_history(declared(params).except(:borrow_id, :member_id))
                                 present updated_borrow
                             else
-                                error!('You are not allowed to access this resource', 403)
+                                error!('You are not authorized to perform this action', 403)
                             end
                         else
                             error!('Member not found', 404)

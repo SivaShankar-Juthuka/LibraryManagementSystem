@@ -24,7 +24,7 @@ class Api::V1::Fines < Grape::API
                     fine_histories = paginate(fine_histories)
                     present fine_histories, with: Api::Entities::Fine, type: :full
                 else
-                    error!('Not authorized', 401)
+                    error!('You are not authorized to perform this action', 401)
                 end
             end
         end
@@ -53,7 +53,7 @@ class Api::V1::Fines < Grape::API
                         fines = paginate(fines)
                         present fines, with: Api::Entities::Fine, type: :full
                     else
-                        error!('Not authorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
     
@@ -69,7 +69,7 @@ class Api::V1::Fines < Grape::API
                         fine.update(paid_status: params[:paid_status])
                         present fine, with: Api::Entities::Fine, type: :full
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
     
@@ -81,7 +81,7 @@ class Api::V1::Fines < Grape::API
                         fine.destroy
                         present message: "Fine deleted successfully"
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
             end

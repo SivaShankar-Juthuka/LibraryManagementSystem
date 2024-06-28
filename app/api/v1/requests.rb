@@ -55,7 +55,7 @@ class Api::V1::Requests < Grape::API
                             requests = paginate(requests)
                             present requests, with: Api::Entities::Request, type: :full
                         else
-                            error!({message: "You are not allowed to access this resource"}, 401)
+                            error!({message: "You are not authorized to perform this action"}, 401)
                         end
                     else
                         error!('Member not found', 404)
@@ -73,7 +73,7 @@ class Api::V1::Requests < Grape::API
                         request = Request.find(params[:id])
                         present request #, with: Entities::Request
                     else
-                        error!({message: "You are not allowed to access this resource"}, 401)
+                        error!({message: "You are not authorized to perform this action"}, 401)
                     end
                 end
 
@@ -94,7 +94,7 @@ class Api::V1::Requests < Grape::API
                             error!(result[:error], 422)
                         end
                         else
-                            error!({ message: "You are not allowed to access this resource" }, 401)
+                            error!({ message: "You are not authorized to perform this action" }, 401)
                         end
                     else
                         error!('Member not found', 404)
@@ -119,7 +119,7 @@ class Api::V1::Requests < Grape::API
                                 error!(result[:error], 422)
                             end
                         else
-                            error!('You are not allowed to access this resource', 401)
+                            error!('You are not authorized to perform this action', 401)
                         end
                     else
                         error!('Member not found', 404)
