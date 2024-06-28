@@ -114,7 +114,7 @@ class Api::V1::Requests < Grape::API
                         if Current.user.librarian? && Current.library_id == member.library_id
                             result = Request.edit_request(params[:id], params[:member_id], params, Current.user)
                             if result[:success]
-                                present result[:request]
+                                present result[:request], with: Api::Entities::Request
                             else
                                 error!(result[:error], 422)
                             end

@@ -38,8 +38,6 @@ class User < ApplicationRecord
           error!({ message: member.errors.full_messages.join(", ") }, 422)
         end
         user.update(is_assigned: true)
-        user.reload
-        puts user.inspect , "%#####$############"
         member
     end
       
@@ -63,7 +61,7 @@ class User < ApplicationRecord
         Member.exists?(user_id: self.id, library_id: library_id)
     end
 
-    def self.ransackable_attributes(auth_object = nil)
+    def self.ransackable_attributes
         %w[id email user_name is_assigned]
     end
 end

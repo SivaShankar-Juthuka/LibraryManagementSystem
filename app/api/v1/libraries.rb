@@ -246,26 +246,23 @@ class Api::V1::Libraries < Grape::API
                     optional :query, type: String, desc: "Search query"
                 end
                 get do
-                    if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id])
-                        library = Library.find(params[:library_id])
-                        search_conditions ={
-                            id_eq: params[:query],
-                            book_id_eq: params[:query],
-                            library_id_eq: params[:query],
-                            copies_borrowed_eq: params[:query],
-                            copies_available_eq: params[:query],
-                            copies_reserved_eq: params[:query]
-                        }
-                        if library
-                            book_inventories = library.book_inventories
-                            book_inventories = paginate(book_inventories)
-                            present book_inventories, with: Api::Entities::BookInventory, type: :full
-                        else
-                            error!('Library not found', 404)
-                        end
+                    library = Library.find(params[:library_id])
+                    search_conditions ={
+                        id_eq: params[:query],
+                        book_id_eq: params[:query],
+                        library_id_eq: params[:query],
+                        copies_borrowed_eq: params[:query],
+                        copies_available_eq: params[:query],
+                        copies_reserved_eq: params[:query]
+                    }
+                    if library
+                        book_inventories = library.book_inventories
+                        book_inventories = paginate(book_inventories)
+                        present book_inventories, with: Api::Entities::BookInventory, type: :full
                     else
-                        error!({ error: "Unauthorized" }, 401)
+                        error!('Library not found', 404)
                     end
+                
                 end
 
 

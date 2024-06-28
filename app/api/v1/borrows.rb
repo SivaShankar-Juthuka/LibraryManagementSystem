@@ -81,15 +81,11 @@ class Api::V1::Borrows < Grape::API
                     end
                     put do
                         member = Member.find(params[:member_id])
-                        if member
-                            if Current.user.librarian? && Current.library_id  ==  member.library_id
-                                borrow = member.borrows.find(params[:borrow_id])
-                                if borrow
-                                    updated_borrow = borrow.update_borrow_history(declared(params).except(:borrow_id, :member_id))
-                                    present updated_borrow, with: Api::Entities::Borrow, type: :full
-                                else
-                                    error!('Borrow not found', 404)
-                                end
+                        borrow = Borrow.find(params[:borrow_id])
+                        if member && borrow
+                            if Current.user.librarian? 
+                                updated_borrow = borrow.update_borrow_history(declared(params).except(:borrow_id, :member_id))
+                                present updated_borrow
                             else
                                 error!('You are not allowed to access this resource', 403)
                             end

@@ -13,10 +13,8 @@ class Borrow < ApplicationRecord
 
   def update_borrow_history(params)
     update_attributes = params.slice(:book_id, :returned_at)
-
     if update(update_attributes)
       update_book_copy(params[:is_damaged]) if params[:is_damaged].present?
-      self
     else
       errors.add(:base, 'Failed to update borrow history')
       throw :abort
@@ -27,12 +25,7 @@ class Borrow < ApplicationRecord
 
   def update_book_copy(is_damaged)
     book_copy = BookCopy.find_by(copy_number: issued_copy)
-    if book_copy
-      book_copy.update(is_damaged: is_damaged)
-    else
-      errors.add(:base, 'Book copy not found')
-      throw :abort
-    end
+    book_copy.update(is_damaged: is_damaged)
   end
 
   def book_not_already_borrowed_by_member
@@ -78,7 +71,6 @@ class Borrow < ApplicationRecord
   def handle_returned_book
     book_copy = BookCopy.find_by(copy_number: issued_copy)
     book_inventory = BookInventory.find_by(book_id: book.id)
-    
     if book_copy && book_inventory
       if book_copy.is_damaged
         Fine.create_fine_for_damaged(self)

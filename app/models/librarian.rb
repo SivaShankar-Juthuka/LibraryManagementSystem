@@ -19,7 +19,11 @@ class Librarian < ApplicationRecord
     end
   end
 
-  def self.ransackable_attributes(auth_object = nil)
+  def self.ransackable_attributes
     %w[id library_id user_id]
+  end
+
+  def self.ransackable_associations
+    %w[library user]
   end
 end

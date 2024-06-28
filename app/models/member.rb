@@ -13,11 +13,11 @@ class Member < ApplicationRecord
     update(borrowing_limit: borrowing_limit + 1)
   end
 
-  def self.ransackable_attributes(auth_object = nil)
+  def self.ransackable_attributes
       %w[id library_id borrowing_limit user_id]
   end
 
-  def self.ransackable_associations(auth_object = nil)
+  def self.ransackable_associations
     %w[borrows fines library requests user]
   end
 end

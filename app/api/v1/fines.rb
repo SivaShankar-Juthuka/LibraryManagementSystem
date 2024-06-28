@@ -39,7 +39,6 @@ class Api::V1::Fines < Grape::API
                     optional :query, type: String, desc: "Search query"
                 end
                 get do 
-                    member = Member.find(params[:member_id])
                     search_conditions = {
                         member_id_eq: params[:query],
                         book_id_eq: params[:query],
@@ -48,7 +47,9 @@ class Api::V1::Fines < Grape::API
                         due_date_cont: params[:query],
                         returned_at_cont: params[:query]
                     }
+                    member = Member.find(params[:member_id])
                     fines = member.fines.ransack(search_conditions.merge(m: 'or')).result
+                    fines = paginate(fines)
                     present fines, with: Api::Entities::Fine, type: :full
                 end
     
@@ -60,12 +61,9 @@ class Api::V1::Fines < Grape::API
                 end
                 put ':id' do
                     if Current.user.admin? ||  Current.user.librarian?
-                        fine = Member.find(params[:member_id]).fines.find(params[:id])
-                        if fine.update(params)
-                            present fine
-                        else
-                            error!(fine.errors.full_messages, 422)
-                        end
+                        fine = Fine.find(params[:id])
+                        fine.update(paid_status: params[:paid_status])
+                        present fine, with: Api::Entities::Fine, type: :full
                     else
                         error!('Unauthorized', 401)
                     end

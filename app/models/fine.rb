@@ -48,11 +48,11 @@ class Fine < ApplicationRecord
     self.paid_at = Time.current if paid_status
   end
 
-  def self.ransackable_attributes(auth_object = nil)
+  def self.ransackable_attributes
     %i[id fine_amount paid_status paid_at fine_type]
   end
 
-  def self.ransackable_associations(auth_object = nil)
+  def self.ransackable_associations
     %w[member borrow]
   end
 end
