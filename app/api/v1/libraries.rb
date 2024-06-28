@@ -23,7 +23,7 @@ class Api::V1::Libraries < Grape::API
                 library = paginate(libraries)
                 present library, with: Api::Entities::Library, type: :full
             else
-                error!('Unauthorized', 401)
+                error!('You are not authorized to perform this action', 401)
             end
         end
         
@@ -45,7 +45,7 @@ class Api::V1::Libraries < Grape::API
                     error!({ error: "Failed to create library" }, 400)
                 end
             else
-                error!({ error: "Unauthorized" }, 401)
+                error!({ error: "You are not authorized to perform this action" }, 401)
             end
         end
         
@@ -68,7 +68,7 @@ class Api::V1::Libraries < Grape::API
                     fine_rate = paginate(fine_rates)
                     present fine_rate, with: Api::Entities::FineRate, type: :full
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
         end
@@ -94,7 +94,7 @@ class Api::V1::Libraries < Grape::API
                     book_inventories = paginate(book_inventories)
                     present book_inventories, with: Api::Entities::BookInventory, type: :full
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
         end
@@ -119,7 +119,7 @@ class Api::V1::Libraries < Grape::API
                     libraries = paginate(libraries)
                     present libraries, with: Api::Entities::Library, type: :full
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
 
@@ -139,7 +139,7 @@ class Api::V1::Libraries < Grape::API
                         error!({ error: "Library not found" }, 404)
                     end
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
 
@@ -155,7 +155,7 @@ class Api::V1::Libraries < Grape::API
                         error!({ error: "Library not found" }, 404)
                     end
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
 
@@ -182,7 +182,7 @@ class Api::V1::Libraries < Grape::API
                         error!('Library not found', 404)
                     end
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
 
@@ -208,7 +208,7 @@ class Api::V1::Libraries < Grape::API
                         error!('Library not found', 404)
                     end
                 else
-                    error!({ error: "Unauthorized" }, 401)
+                    error!({ error: "You are not authorized to perform this action" }, 401)
                 end
             end
 
@@ -286,7 +286,7 @@ class Api::V1::Libraries < Grape::API
                             error!(book_inventory.errors.full_messages, 422)
                         end
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
         
@@ -305,7 +305,7 @@ class Api::V1::Libraries < Grape::API
                             error!('Book inventory not found', 404)
                         end
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
         
@@ -331,7 +331,7 @@ class Api::V1::Libraries < Grape::API
                                 error!('Book inventory not found', 404)
                             end
                         else
-                            error!('Unauthorized', 401)
+                            error!('You are not authorized to perform this action', 401)
                         end
                     end
             
@@ -352,7 +352,7 @@ class Api::V1::Libraries < Grape::API
                                 error!('Library not found', 404)
                             end
                         else
-                            error!('Unauthorized', 401)
+                            error!('You are not authorized to perform this action', 401)
                         end
                     end
                 end
@@ -384,7 +384,7 @@ class Api::V1::Libraries < Grape::API
                             error!('Library not found', 404)
                         end
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
             
@@ -404,7 +404,7 @@ class Api::V1::Libraries < Grape::API
                             error!(fine_rate.errors.full_messages, 422)
                         end
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
             
@@ -425,7 +425,7 @@ class Api::V1::Libraries < Grape::API
                             error!(fine_rate.errors.full_messages, 422)
                         end
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
             
@@ -441,7 +441,7 @@ class Api::V1::Libraries < Grape::API
                         fine_rate.destroy
                         present message: "Fine Rate is destroyed."
                     else
-                        error!('Unauthorized', 401)
+                        error!('You are not authorized to perform this action', 401)
                     end
                 end
             end
