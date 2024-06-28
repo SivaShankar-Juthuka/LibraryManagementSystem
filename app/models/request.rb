@@ -93,11 +93,11 @@ class Request < ApplicationRecord
     end
   end
 
-  def self.ransackable_attributes
+  def self.ransackable_attributes(auth_object = nil)
     %w[id member_id book_id requested_at is_approved]
   end
 
-  def self.ransackable_associations
+  def self.ransackable_associations(auth_object = nil)
     %w[member book]
   end
 end

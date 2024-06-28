@@ -75,11 +75,11 @@ class Borrow < ApplicationRecord
       if book_copy.is_damaged
         Fine.create_fine_for_damaged(self)
         book_copy.update_availability(false)
+        book_inventory.update(copies_borrowed: copies_borrowed - 1)
       else
         Fine.create_fine_if_overdue(self)
+        book_inventory.update_inventory_on_return
       end
-      
-      book_inventory.update_inventory_on_return
       member.increment_borrow_limit
     else
       errors.add(:base, "Error processing the returned book")

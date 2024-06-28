@@ -14,11 +14,11 @@ class Book < ApplicationRecord
         book_copies.find_by(is_available: true, is_damaged: false)
     end
 
-    def self.ransackable_attributes
+    def self.ransackable_attributes(auth_object = nil)
         %w[title author isbn published_at genre copy_count]
     end
 
-    def self.ransackable_associations
+    def self.ransackable_associations(auth_object = nil)
         %w[book_copies book_inventories libraries]
     end
 end

@@ -61,8 +61,7 @@ class User < ApplicationRecord
         Member.exists?(user_id: self.id, library_id: library_id)
     end
 
-    def self.ransackable_attributes
+    def self.ransackable_attributes(auth_object = nil)
         %w[id email user_name is_assigned]
     end
 end
-  

@@ -1,5 +1,5 @@
 class Api::Entities::Member < Grape::Entity
-    expose :id,  if: { type: [:full, :private] }
+    expose :id,  if: { type: :full}
     expose :user, using: Api::Entities::User do |member|
         member.user
     end

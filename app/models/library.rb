@@ -4,11 +4,11 @@ class Library < ApplicationRecord
     has_many :members
     has_many :fine_rates, dependent: :destroy
 
-    def self.ransackable_attributes
+    def self.ransackable_attributes(auth_object = nil)
         %w[id library_name library_address]
     end
 
-    def self.ransackable_associations
+    def self.ransackable_associations(auth_object = nil)
         %w[book_inventories librarians members fine_rates]
     end
 end
