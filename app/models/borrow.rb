@@ -12,13 +12,12 @@ class Borrow < ApplicationRecord
   after_update :handle_returned_book, if: :saved_change_to_returned_at?
 
   def update_borrow_history(params)
-    update_attributes = params.slice(:book_id, :returned_at)
-    if update(update_attributes)
-      update_book_copy(params[:is_damaged]) if params[:is_damaged].present?
-    else
-      errors.add(:base, 'Failed to update borrow history')
-      throw :abort
+    self.update!(params.except(:is_damaged))
+    if params[:is_damaged].present?
+      puts "%%%%%%%%%%%%%%%%%%%%%"
+      update_book_copy(params[:is_damaged])
     end
+    handle_returned_book
   end
 
   private
@@ -49,8 +48,8 @@ class Borrow < ApplicationRecord
   def assign_issued_copy_and_dates
     request = Request.find_by(member_id: member_id, book_id: book_id, is_approved: true)
     if request.present?
-      book_copy = book.book_copies.find_by(is_available: true, is_damaged: false)
-      book_inventory = BookInventory.find_by(book_id: book.id)
+      book_copy = book.book_copies.find_by(is_available: true, is_damaged: false, library_id: member.library_id)
+      book_inventory = BookInventory.find_by(book_id: book.id, library_id: member.library_id)
       if book_copy && book_inventory && book_inventory.available_copies > 0
         self.issued_copy = book_copy.copy_number
         self.borrowed_at ||= Time.current
@@ -70,12 +69,12 @@ class Borrow < ApplicationRecord
 
   def handle_returned_book
     book_copy = BookCopy.find_by(copy_number: issued_copy)
-    book_inventory = BookInventory.find_by(book_id: book.id)
+    book_inventory = BookInventory.find_by(book_id: book.id, library_id: member.library_id)
     if book_copy && book_inventory
       if book_copy.is_damaged
         Fine.create_fine_for_damaged(self)
         book_copy.update_availability(false)
-        book_inventory.update(copies_borrowed: copies_borrowed - 1)
+        book_inventory.update(copies_borrowed: book_inventory.copies_borrowed - 1)
       else
         Fine.create_fine_if_overdue(self)
         book_inventory.update_inventory_on_return
@@ -94,5 +93,4 @@ class Borrow < ApplicationRecord
   def self.ransackable_associations(auth_object = nil)
     %w[member book fines]
   end
-  
 end

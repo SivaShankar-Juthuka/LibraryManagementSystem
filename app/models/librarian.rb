@@ -12,10 +12,10 @@ class Librarian < ApplicationRecord
         librarian.update(library_id: new_library_id)
         librarian
       else
-        raise ActiveRecord::RecordNotFound.new("New library not found")
+        error!({error: "Library Not found"}, 404)
       end
     else
-      raise ActiveRecord::RecordNotFound.new("Librarian not found")
+      error!({error: "Librarian Not found"}, 404)
     end
   end
 

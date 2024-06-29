@@ -42,7 +42,7 @@ class Api::V1::Borrows < Grape::API
                 get do
                     member = Member.find(params[:member_id])
                     if member
-                        if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  member.library_id) || (Current.user.member? && Current.user.id == member.user_id)
+                        if Current.user.admin? || (Current.user.librarian? && Current.library_id == member.library_id) || (Current.user.member? && Current.library_id == member.library_id && Current.user.id ==  member.id)
                             search_conditions = {
                                 member_id_eq: params[:query],
                                 book_id_eq: params[:query],
@@ -75,7 +75,6 @@ class Api::V1::Borrows < Grape::API
                     # edit the borrow history
                     desc "Edit the borrow history"
                     params do
-                        requires :book_id, type: Integer, desc: "Book ID"
                         requires :returned_at, type: Date, desc: "Return date"
                         optional :is_damaged, type: Boolean, desc: "Damage Status"
                     end
@@ -84,8 +83,8 @@ class Api::V1::Borrows < Grape::API
                         borrow = Borrow.find(params[:borrow_id])
                         if member && borrow
                             if Current.user.librarian? 
-                                updated_borrow = borrow.update_borrow_history(declared(params).except(:borrow_id, :member_id))
-                                present updated_borrow
+                                borrow.update_borrow_history(params.except(:borrow_id, :member_id))
+                                present borrow, with: Api::Entities::Borrow
                             else
                                 error!('You are not authorized to perform this action', 403)
                             end

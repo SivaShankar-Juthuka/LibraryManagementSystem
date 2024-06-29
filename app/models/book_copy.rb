@@ -1,5 +1,6 @@
 class BookCopy < ApplicationRecord
   belongs_to :book
+  belongs_to :library
 
   validates :copy_number, presence: true, numericality: { only_integer: true }
   validates :is_damaged, inclusion: { in: [true, false] }
@@ -14,6 +15,6 @@ class BookCopy < ApplicationRecord
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %i[book]
+    %i[book library]
   end
 end

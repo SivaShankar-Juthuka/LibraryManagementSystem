@@ -40,7 +40,7 @@ class Api::V1::Libraries < Grape::API
                     library_address: params[:library_address]
                 )
                 if library.save
-                    present message: "Library created successfully", library: library, with: Api::Entities::Library, type: :full
+                    present library, with: Api::Entities::Library, type: :full
                 else
                     error!({ error: "Failed to create library" }, 400)
                 end
@@ -102,21 +102,9 @@ class Api::V1::Libraries < Grape::API
         route_param :library_id do
             # Get the Specific library details
             desc "Get a Library"
-            params do
-                optional :page, type: Integer, desc: "Page number"
-                optional :per_page, type: Integer, desc: "Number of items per page"
-                optional :query, type: String, desc: "Search query"
-            end
             get do
-                if Current.user.admin? || Current.library_id == params[:library_id]
-                    search_conditions ={
-                        id_eq: params[:query],
-                        library_name_cont: params[:query],
-                        library_address_cont: params[:query]
-                    }
-                    libraries = Library.where(id: params[:library_id])
-                    libraries = libraries.ransack(search_conditions.merge(m: 'or')).result
-                    libraries = paginate(libraries)
+                if Current.user.admin? || (Current.library_id == params[:library_id].to_i)
+                    libraries = Library.find_by(id: params[:library_id])
                     present libraries, with: Api::Entities::Library, type: :full
                 else
                     error!({ error: "You are not authorized to perform this action" }, 401)
@@ -193,7 +181,7 @@ class Api::V1::Libraries < Grape::API
                 optional :query, type: String, desc: "Search query"
             end
             get 'members' do
-                if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  params[:library_id])
+                if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  params[:library_id].to_i)
                     library = Library.find(params[:library_id])
                     search_conditions ={
                         id_eq: params[:query],
@@ -220,20 +208,24 @@ class Api::V1::Libraries < Grape::API
                     optional :query, type: String, desc: "Search query"
                 end
                 get do
-                    library = Library.find(params[:library_id])
-                    book_inventories = library.book_inventories
-                    search_conditions = {
-                      title_cont: params[:query],
-                      author_cont: params[:query],
-                      published_at_cont: params[:query],
-                      isbn_matches: params[:query],
-                      genre_cont: params[:query],
-                      copy_count_matches: params[:query]
-                    }
-                    books = Book.joins(:book_inventories).where(book_inventories: { id: book_inventories }).distinct
-                    books = books.ransack(search_conditions.merge(m: 'or')).result
-                    books = paginate(books)
-                    present books, with: Api::Entities::Book, type: :full
+                    if Current.user.admin? || (Current.library_id ==  params[:library_id].to_i)
+                        library = Library.find(params[:library_id])
+                        book_inventories = library.book_inventories
+                        search_conditions = {
+                            title_cont: params[:query],
+                            author_cont: params[:query],
+                            published_at_cont: params[:query],
+                            isbn_matches: params[:query],
+                            genre_cont: params[:query],
+                            copy_count_matches: params[:query]
+                        }
+                        books = Book.joins(:book_inventories).where(book_inventories: { id: book_inventories }).distinct
+                        books = books.ransack(search_conditions.merge(m: 'or')).result
+                        books = paginate(books)
+                        present books, with: Api::Entities::Book, type: :full
+                    else
+                        error!({ error: "You are not authorized to perform this action" }, 401)
+                    end
                 end
             end
 
@@ -246,8 +238,8 @@ class Api::V1::Libraries < Grape::API
                     optional :query, type: String, desc: "Search query"
                 end
                 get do
-                    library = Library.find(params[:library_id])
-                    if Current.user.admin? || (Current.user.librarian? && Current.library_id ==  params[:library_id])
+                    if Current.user.admin?  || (Current.library_id ==  params[:library_id].to_i)
+                        library = Library.find(params[:library_id])
                         search_conditions ={
                             id_eq: params[:query],
                             book_id_eq: params[:query],
@@ -264,7 +256,7 @@ class Api::V1::Libraries < Grape::API
                             error!('Library not found', 404)
                         end
                     else
-                        error!('You are not authorized to access this resource', 403)
+                        error!({ error: "You are not authorized to perform this action" }, 401)
                     end
                 end
 
@@ -277,11 +269,11 @@ class Api::V1::Libraries < Grape::API
                     requires :copies_reserved, type: Integer, desc: "Copies reserved"
                 end
                 post do
-                    if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id])
+                    if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
                         library = Library.find(params[:library_id])
                         book_inventory = library.book_inventories.new(params)
                         if book_inventory.save
-                            present message: "Book inventory successfully created.", book_inventory: book_inventory, with: Api::Entities::BookInventory, type: :full
+                            present book_inventory, with: Api::Entities::BookInventory, type: :full
                         else
                             error!(book_inventory.errors.full_messages, 422)
                         end
@@ -296,7 +288,7 @@ class Api::V1::Libraries < Grape::API
                     requires :inventory_id, type: Integer, desc: "Book Inventory ID"
                 end
                 get ':inventory_id' do
-                    if Current.user.admin? ||  (Current.user.librarian? && Current.library_id == params[:library_id]) 
+                    if Current.user.admin? ||  (Current.library_id == params[:library_id].to_i)
                         library = Library.find(params[:library_id])
                         book_inventory = library.book_inventories.find_by(id: params[:inventory_id])
                         if book_inventory
@@ -318,12 +310,12 @@ class Api::V1::Libraries < Grape::API
                         optional :copies_reserved, type: Integer, desc: "Copies Reserved"
                     end
                     put do
-                        if Current.user.admin? || (Current.user.librarian? && Current.library_id  == params[:library_id])
+                        if Current.user.admin? || (Current.user.librarian? && Current.library_id  == params[:library_id].to_i)
                             library = Library.find(params[:library_id])
                             book_inventory = library.book_inventories.find_by(id: params[:id])
                             if book_inventory
                                 if book_inventory.update(params)
-                                    present message: "Book Inventory Updated Successfully", book_inventory: book_inventory, with: Api::Entities::BookInventory, type: :full
+                                    present book_inventory, with: Api::Entities::BookInventory, type: :full
                                 else
                                     error!(book_inventory.errors.full_messages, 422)
                                 end
@@ -368,7 +360,7 @@ class Api::V1::Libraries < Grape::API
                     optional :query, type: String, desc: "Search query"
                 end
                 get do
-                    if Current.user.admin? || (Current.user.librarian? && Current.library_id  == params[:library_id])
+                    if Current.user.admin? || (Current.user.librarian? && Current.library_id  == params[:library_id].to_i)
                         library = Library.find(params[:library_id])
                         search_conditions ={
                             id_eq: params[:query],
@@ -395,7 +387,7 @@ class Api::V1::Libraries < Grape::API
                     requires :fine_amount, type: Float, desc: "Rate for the fine type"
                 end
                 post do
-                    if Current.user.admin? || Current.user.librarian?
+                    if Current.user.admin? || (Current.user.librarian?  && Current.library_id == params[:library_id].to_i)
                         library = Library.find(params[:library_id])
                         fine_rate = library.fine_rates.new(declared(params))
                         if fine_rate.save
@@ -416,7 +408,7 @@ class Api::V1::Libraries < Grape::API
                     optional :fine_amount, type: Float, desc: "Rate for the fine type"
                 end
                 put ':id' do
-                    if Current.user.admin? || Current.user.librarian?
+                    if Current.user.admin? || Current.user.librarian?  && Current.library_id == params[:library_id].to_i
                         library = Library.find(params[:library_id])
                         fine_rate = library.fine_rates.find(params[:id])
                         if fine_rate.update(declared(params, include_missing: false))
@@ -435,13 +427,109 @@ class Api::V1::Libraries < Grape::API
                     requires :id, type: Integer, desc: "Fine Rate ID"
                 end
                 delete ':id' do
-                    if Current.user.admin? || Current.user.librarian?
+                    if Current.user.admin?
                         library = Library.find(params[:library_id])
                         fine_rate = library.fine_rates.find(params[:id])
                         fine_rate.destroy
                         present message: "Fine Rate is destroyed."
                     else
                         error!('You are not authorized to perform this action', 401)
+                    end
+                end
+            end
+
+            resources :books do
+                route_param :book_id do
+                    resources :book_copies do
+                        # Get all book copies of a book in a library
+                        desc "Get all book copies of a book in a library"
+                        params do
+                            optional :page, type: Integer, desc: "Page number"
+                            optional :per_page, type: Integer, desc: "Number of records per page"
+                            optional :query, type: String, desc: "search condition"
+                        end
+                        get do
+                            if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                                search_conditions = {
+                                    book_id_eq: params[:query],
+                                    library_id_eq: params[:query],
+                                    is_damaged_eq: params[:query],
+                                    is_available_eq: params[:query]
+                                }
+                                book_copies = BookCopy.where(book_id: params[:book_id].to_i, library_id: params[:library_id].to_i)
+                                book_copies = book_copies.ransack(search_conditions.merge(m: 'and')).result
+                                book_copies = paginate(book_copies)
+                                present book_copies, with: Api::Entities::BookCopy, type: :full
+                            else
+                                error!('Unauthorized', 401)
+                            end
+                        end
+
+                        # Create a book copy for a book in a library
+                        desc "Create a book copy for a book in a library"
+                        params do
+                            requires :copy_number, type: Integer, desc: "Copy number"
+                            requires :is_damaged, type: Boolean, desc: "Damage status"
+                        end
+                        post do
+                            if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                                book = Book.find(params[:book_id])
+                                if book
+                                    book_copy = BookCopy.new(params.merge(book_id: params[:book_id], library_id: params[:library_id]))
+                                    if book_copy.save
+                                        present book_copy, with: Api::Entities::BookCopy, type: :full
+                                    else
+                                        error!('Failed to create book copy', 422)
+                                    end
+                                else
+                                    error!('Book not found', 404)
+                                end
+                            else
+                                error!('Unauthorized', 401)
+                            end
+                        end
+
+                        route_param :id do
+                            # Edit a book copy
+                            desc "Edit a book copy"
+                            params do
+                                optional :copy_number, type: Integer, desc: "Copy number"
+                                optional :is_damaged, type: Boolean, desc: "Damage status"
+                                optional :is_available, type: Boolean, desc: "Availability status"
+                            end
+                            put do
+                                if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                                    book_copy = BookCopy.find(params[:id])
+                                    if book_copy && book_copy.library_id == params[:library_id].to_i
+                                        if book_copy.update(params)
+                                            present book_copy, with: Api::Entities::BookCopy
+                                        else
+                                            error!('Failed to update book copy', 422)
+                                        end
+                                    else
+                                        error!('Book copy not found', 404)
+                                    end
+                                else
+                                    error!('Unauthorized', 401)
+                                end
+                            end
+
+                            # Delete a book copy
+                            desc "Delete a book copy"
+                            delete do
+                                if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                                    book_copy = BookCopy.find(params[:id])
+                                    if book_copy && book_copy.library_id == params[:library_id].to_i
+                                        book_copy.destroy
+                                        { message: "Book copy deleted" }
+                                    else
+                                        error!('Book copy not found', 404)
+                                    end
+                                else
+                                    error!('Unauthorized', 401)
+                                end
+                            end
+                        end
                     end
                 end
             end

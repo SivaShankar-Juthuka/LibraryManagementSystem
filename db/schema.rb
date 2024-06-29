@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_06_27_074749) do
+ActiveRecord::Schema[7.1].define(version: 2024_06_29_061007) do
   create_table "admins", force: :cascade do |t|
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
@@ -31,7 +31,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_06_27_074749) do
     t.datetime "updated_at", null: false
     t.integer "copy_number"
     t.boolean "is_available", default: true
+    t.integer "library_id", null: false
     t.index ["book_id"], name: "index_book_copies_on_book_id"
+    t.index ["library_id"], name: "index_book_copies_on_library_id"
   end
 
   create_table "book_inventories", force: :cascade do |t|
@@ -52,9 +54,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_06_27_074749) do
     t.string "isbn"
     t.integer "published_at"
     t.string "genre"
-    t.integer "copy_count"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "copy_count"
   end
 
   create_table "borrows", force: :cascade do |t|
@@ -140,6 +142,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_06_27_074749) do
 
   add_foreign_key "admins", "users"
   add_foreign_key "book_copies", "books"
+  add_foreign_key "book_copies", "libraries"
   add_foreign_key "book_inventories", "books"
   add_foreign_key "book_inventories", "libraries"
   add_foreign_key "borrows", "books"
