@@ -269,7 +269,7 @@ class Api::V1::Libraries < Grape::API
                     requires :copies_reserved, type: Integer, desc: "Copies reserved"
                 end
                 post do
-                    if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                    if (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
                         library = Library.find(params[:library_id])
                         book_inventory = library.book_inventories.new(params)
                         if book_inventory.save
@@ -472,7 +472,7 @@ class Api::V1::Libraries < Grape::API
                             requires :is_damaged, type: Boolean, desc: "Damage status"
                         end
                         post do
-                            if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                            if (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
                                 book = Book.find(params[:book_id])
                                 if book
                                     book_copy = BookCopy.new(params.merge(book_id: params[:book_id], library_id: params[:library_id]))
@@ -498,7 +498,7 @@ class Api::V1::Libraries < Grape::API
                                 optional :is_available, type: Boolean, desc: "Availability status"
                             end
                             put do
-                                if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                                if (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
                                     book_copy = BookCopy.find(params[:id])
                                     if book_copy && book_copy.library_id == params[:library_id].to_i
                                         if book_copy.update(params)
@@ -517,7 +517,7 @@ class Api::V1::Libraries < Grape::API
                             # Delete a book copy
                             desc "Delete a book copy"
                             delete do
-                                if Current.user.admin? || (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
+                                if (Current.user.librarian? && Current.library_id == params[:library_id].to_i)
                                     book_copy = BookCopy.find(params[:id])
                                     if book_copy && book_copy.library_id == params[:library_id].to_i
                                         book_copy.destroy

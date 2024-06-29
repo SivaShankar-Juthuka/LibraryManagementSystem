@@ -9,12 +9,10 @@ class Borrow < ApplicationRecord
   validate :borrow_limit_not_exceeded, on: :create
 
   before_validation :assign_issued_copy_and_dates, on: :create
-  after_update :handle_returned_book, if: :saved_change_to_returned_at?
 
   def update_borrow_history(params)
     self.update!(params.except(:is_damaged))
     if params[:is_damaged].present?
-      puts "%%%%%%%%%%%%%%%%%%%%%"
       update_book_copy(params[:is_damaged])
     end
     handle_returned_book
