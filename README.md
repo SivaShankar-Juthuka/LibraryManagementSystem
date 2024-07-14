@@ -5,6 +5,8 @@ This project focuses on managing libraries and their books borrowings and reques
 2. Librarian
 3. Member (considered as a student)
 
+## Library Management System Database Schema [ Link ](https://lucid.app/lucidchart/f45f7669-fdff-46eb-9027-3161c92824c3/edit?viewport_loc=3663%2C5096%2C3740%2C1839%2C0_0&invitationId=inv_fc50fe31-6ee8-4f58-8ed0-aee3d3bc441a)
+
 ## Admin Responsibilities
 1. Assign signed-up users as Librarians or Members.
 2. Add libraries to the system and perform CRUD operations.
